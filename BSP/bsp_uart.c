@@ -84,9 +84,9 @@ void USART1_IRQHandler(void)
 	} 
 } 
 
-void usart_SendByte( USART_TypeDef * pUSARTx, uint8_t ch)
+void usart_SendByte(uint8_t ch)
 {
-	USART_SendData(pUSARTx,ch);
+	USART_SendData(USART1,ch);
 		
-	while (USART_GetFlagStatus(pUSARTx, USART_FLAG_TXE) == RESET);	
+	while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET);	
 }

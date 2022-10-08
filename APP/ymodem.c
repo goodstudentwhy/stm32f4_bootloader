@@ -8,23 +8,18 @@
 #include "delay.h"
 #include "shell_port.h"
 
-YModem ymodem = {WAIT_ENTER_SYSTEM, 0, 0, FLASH_APP1_ADDR, 0, {0}};
+YModem ymodem = 
+{
+	WAIT_ENTER_SYSTEM, 
+	0, 
+	0, 
+	FLASH_APP1_ADDR, 
+	0, 
+	{0},
+	usart_SendByte
+};
+
 ProcessStatus process;
-
-void ymodem_ack(void) 
-{
-	usart_SendByte(USART1,ACK);
-}
-
-void ymodem_nack(void) 
-{
-	usart_SendByte(USART1,NAK);
-}
-
-void ymodem_c(void) 
-{
-	usart_SendByte(USART1,CRC16);
-}
 
 void set_ymodem_status(ProcessStatus process) 
 {
@@ -42,11 +37,16 @@ ProcessStatus get_ymodem_status(void)
  *功能：ymodem协议接收函数
  *输入：
 	@Buffer：串口接收到的数据和长度
+ *输出：
+	@return: 0：执行成功
+			1:地址输入错误
+			2:擦写扇区失败
+			3:写入数据失败
 **/
-void ymodem_recv(Buffer *p) 
+int ymodem_recv(Buffer *p) 
 {
 	uint8_t type = p->data[0];
-	static int i = 0;
+	static int i = 0,ret = 0;
 	static u32 USART_RX_CNT = 0;
 	switch (ymodem.status) 
 	{
@@ -55,9 +55,9 @@ void ymodem_recv(Buffer *p)
 			{
 				ymodem.process = BUSY;
 				ymodem.addr = FLASH_APP1_ADDR;
-				ymodem_ack();
+				ymodem.ymodem_send_func(ACK);
 				delay_us(10);
-				ymodem_c();
+				ymodem.ymodem_send_func(CRC16);
 				ymodem.status++;
 			}
 			break;
@@ -66,23 +66,21 @@ void ymodem_recv(Buffer *p)
 			{
 				if (type == SOH)
 				{
-//					load_buf(&p->data[3],128);
 					memcpy(USART_RX_BUF+(i*PACKET_SIZE_128),&p->data[3],PACKET_SIZE_128);
 					i++;
-					USART_RX_CNT += 128;
+					USART_RX_CNT += PACKET_SIZE_128;
 				}
 				else 
 				{
-//					load_buf(&p->data[3],1024);
 					memcpy(USART_RX_BUF+(i*PACKET_SIZE_1024),&p->data[3],PACKET_SIZE_1024);
 					i++;
-					USART_RX_CNT += 1024;
+					USART_RX_CNT += PACKET_SIZE_1024;
 				}
-				ymodem_ack();
+				ymodem.ymodem_send_func(ACK);
 			}
 			else if (type == EOT) 
 			{
-				ymodem_nack();
+				ymodem.ymodem_send_func(NAK);
 				ymodem.status++;
 			}
 			else 
@@ -91,9 +89,9 @@ void ymodem_recv(Buffer *p)
 		case 2:
 			if (type == EOT) 
 			{
-				ymodem_ack();
+				ymodem.ymodem_send_func(ACK);
 				delay_us(10);
-				ymodem_c();
+				ymodem.ymodem_send_func(CRC16);
 				delay_us(10);
 				ymodem.status++;
 			}
@@ -101,14 +99,17 @@ void ymodem_recv(Buffer *p)
 		case 3:
 			if (type == SOH) 
 			{
-				ymodem_ack();
+				ymodem.ymodem_send_func(ACK);
 				ymodem.status = 0;
 				ymodem.process = UPDATE_SUCCESS;
-				iap_write_appbin(ymodem.addr, USART_RX_BUF, USART_RX_CNT);
+				ret = iap_write_appbin(ymodem.addr, USART_RX_BUF, USART_RX_CNT);
+				if(ret != 0)
+					return ret;
 			}
 	}
 	p->len = 0;
 	memset(p->data,0,sizeof(p->data));
+	return 0;
 }
 
 /**
@@ -152,7 +153,7 @@ void ymodem_task(void)
 			if(c_delay >= 100)
 			{
 				c_delay = 0;
-				ymodem_c();
+				ymodem.ymodem_send_func(CRC16);
 			}
 			break;
 		case UPDATE_SUCCESS:

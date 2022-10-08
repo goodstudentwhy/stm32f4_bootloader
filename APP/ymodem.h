@@ -33,7 +33,7 @@ typedef struct {
 	uint32_t addr;
 	uint32_t filesize;
 	char filename[32];
-	YModem_Callback cb;
+	void(*ymodem_send_func)(uint8_t);
 } YModem;
 
 typedef struct {
@@ -43,9 +43,7 @@ typedef struct {
 
 void set_ymodem_status(ProcessStatus process);
 ProcessStatus get_ymodem_status(void);
-void ymodem_recv(Buffer *p);
+int ymodem_recv(Buffer *p);
 void ymodem_task(void);
-void load_buf(u8 *data,u32 len);
-void iap_write_appbin(u32 appxaddr,u8 *appbuf,u32 appsize);
 
 #endif

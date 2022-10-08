@@ -2,6 +2,7 @@
 #include "stdio.h"
 #include "timer.h"
 #include "ymodem.h"
+#include "commond.h"
 
 Buffer recvBuf;
 
@@ -44,10 +45,19 @@ void TIM3_IRQHandler(void)
 
 void TIM5_IRQHandler(void)
 {
+	int ret = 0;
 	if(TIM_GetITStatus(TIM5,TIM_IT_Update)==SET) //溢出中断
 	{
 		TIM_ClearITPendingBit(TIM5,TIM_IT_Update);  //清除中断标志位
 		TIM_Cmd(TIM5,DISABLE);
-		ymodem_recv(&recvBuf);
+//		if(boot_param.error_code != 0)
+//		{
+			ret = ymodem_recv(&recvBuf);
+			if(ret != 0)
+			{
+				boot_param.error_code = ret;
+				printf("写入固件错误，ret:%d\r\n",ret);
+			}
+//		}
 	}
 }

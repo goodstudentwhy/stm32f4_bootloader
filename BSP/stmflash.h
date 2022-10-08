@@ -22,9 +22,8 @@
 #define ADDR_FLASH_SECTOR_11    ((u32)0x080E0000) 	//扇区11起始地址,128 Kbytes  
 
 u32 STMFLASH_ReadWord(u32 faddr);		  	  
-void STMFLASH_Write(u32 WriteAddr,u32 *pBuffer,u32 NumToWrite);		
-void STMFLASH_Read(u32 ReadAddr,u32 *pBuffer,u32 NumToRead);   	
-void stmflash_write(u32 WriteAddr,u32 *pBuffer,u32 NumToWrite)	;	   
+int STMFLASH_Write(u32 WriteAddr,u32 *pBuffer,u32 NumToWrite);		
+void STMFLASH_Read(u32 ReadAddr,u32 *pBuffer,u32 NumToRead);   	  
 #endif
 
 

@@ -42,5 +42,5 @@ typedef struct
 extern u8 USART_RX_BUF[USART_REC_LEN]; 			
 
 void uart_init(GPIO_TypeDef* GPIOx,USART_TypeDef* USARTx,uart_config_t uart_config,gpio_config_t gpio_config);
-void usart_SendByte(USART_TypeDef * pUSARTx, uint8_t ch);
+void usart_SendByte(uint8_t ch);
 #endif

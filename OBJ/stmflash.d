@@ -40,3 +40,4 @@
 ..\obj\stmflash.o: ..\BSP\bsp_uart.h
 ..\obj\stmflash.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
 ..\obj\stmflash.o: ..\BSP\bsp_gpio.h
+..\obj\stmflash.o: ..\APP\commond.h

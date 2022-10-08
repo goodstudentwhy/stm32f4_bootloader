@@ -13,14 +13,17 @@ u32 iapbuf[512];
 	@appxaddr:APPflash起始地址
 	@appbuf:接收二进制文件
 	@appsize:一组数据大小
+ *输出：
+	@return 0：执行成功
+			1:地址输入错误
+			2:擦写扇区失败
+			3:写入数据失败 
 **/
-void iap_write_appbin(u32 appxaddr,u8 *appbuf,u32 appsize)
+int iap_write_appbin(u32 appxaddr,u8 *appbuf,u32 appsize)
 {
-	u32 t;
+	u32 t = 0,temp = 0,fwaddr=appxaddr;
 	u16 i=0;
-	u32 temp;
-	u32 fwaddr=appxaddr;
-	u8 *dfu=appbuf;
+	u8 *dfu=appbuf,ret = 0;
 	for(t=0;t<appsize;t+=4)
 	{						   
 		temp=(u32)dfu[3]<<24;   
@@ -32,14 +35,19 @@ void iap_write_appbin(u32 appxaddr,u8 *appbuf,u32 appsize)
 		if(i==512)
 		{
 			i=0; 
-			STMFLASH_Write(fwaddr,iapbuf,512);
+			ret = STMFLASH_Write(fwaddr,iapbuf,512);
+			if(ret != 0)
+				return ret;
 			fwaddr+=2048;
 		}
 	} 
 	if(i)
 	{
-		STMFLASH_Write(fwaddr,iapbuf,i);
+		ret = STMFLASH_Write(fwaddr,iapbuf,i);
+		if(ret != 0)
+			return ret;
 	}
+	return 0;
 }
 
 /**

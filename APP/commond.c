@@ -2,7 +2,7 @@
 #include "ymodem.h"
 #include "shell_port.h"
 
-boot_param_t boot_param = {star_jump_app};
+boot_param_t boot_param = {star_jump_app ,none_error};
 #define SCB_AIRCR       (*(volatile unsigned long *)0xE000ED0C)  /* Reset control Address Register */
 #define SCB_RESET_VALUE 0x05FA0004  
 
@@ -15,7 +15,7 @@ void ymodem_ota(void)
 USER_SHELL_EXPORT_CMD(SHELL_TYPE_CMD_FUNC,ymodem_ota,ymodem_ota,ymodem_ota);
 
 /*****重启函数*****/
-void reboot(void)
+__weak void reboot(void)
 {
 	SCB_AIRCR = SCB_RESET_VALUE;
 }

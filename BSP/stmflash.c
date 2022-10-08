@@ -1,7 +1,7 @@
 #include "stmflash.h"
 #include "delay.h"
 #include "bsp_uart.h"
- 
+#include "commond.h"
 
 u32 STMFLASH_ReadWord(u32 faddr)
 {
@@ -24,12 +24,26 @@ uint16_t STMFLASH_GetFlashSector(u32 addr)
 	return FLASH_Sector_11;	
 }
  
-void STMFLASH_Write(u32 WriteAddr,u32 *pBuffer,u32 NumToWrite)	
+/**
+ *名称：STMFLASH_Write
+ *功能：flash写入函数
+ *输入：
+	@WriteAddr：写入地址
+	@pBuffer：写入数据
+	@NumToWrite：写入长度
+ *输出：
+	@return 0：执行成功
+			-1:地址输入错误
+			-2:擦写扇区失败
+			-3:写入数据失败
+**/
+int STMFLASH_Write(u32 WriteAddr,u32 *pBuffer,u32 NumToWrite)	
 { 
 	FLASH_Status status = FLASH_COMPLETE;
 	u32 addrx=0;
 	u32 endaddr=0;	
-	if(WriteAddr<STM32_FLASH_BASE||WriteAddr%4)return;	
+	if(WriteAddr<STM32_FLASH_BASE||WriteAddr%4)
+		return app_addr_error;	
 	FLASH_Unlock();									
 	FLASH_DataCacheCmd(DISABLE);
  		
@@ -42,7 +56,8 @@ void STMFLASH_Write(u32 WriteAddr,u32 *pBuffer,u32 NumToWrite)
 			if(STMFLASH_ReadWord(addrx)!=0XFFFFFFFF)
 			{   
 				status=FLASH_EraseSector(STMFLASH_GetFlashSector(addrx),VoltageRange_3);
-				if(status!=FLASH_COMPLETE)break;	
+				if(status!=FLASH_COMPLETE)
+					return erase_sector_error;
 			}else addrx+=4;
 		} 
 	}
@@ -52,7 +67,7 @@ void STMFLASH_Write(u32 WriteAddr,u32 *pBuffer,u32 NumToWrite)
 		{
 			if(FLASH_ProgramWord(WriteAddr,*pBuffer)!=FLASH_COMPLETE)
 			{ 
-				break;	
+				return write_flash_error;	
 			}
 			WriteAddr+=4;
 			pBuffer++;
@@ -60,6 +75,7 @@ void STMFLASH_Write(u32 WriteAddr,u32 *pBuffer,u32 NumToWrite)
 	}
 	FLASH_DataCacheCmd(ENABLE);	
 	FLASH_Lock();
+	return none_error;
 } 
 
 
